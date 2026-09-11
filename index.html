@@ -23,8 +23,8 @@
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
-      overflow-x: hidden;
+      height: 100vh;
+      overflow: hidden;
     }
 
     /* Banner Superior Estilo Casino */
@@ -32,15 +32,16 @@
       background: linear-gradient(90deg, #1e1035 0%, #0f1c3f 50%, #1a0f30 100%);
       border-bottom: 2px solid #eab308;
       box-shadow: 0 4px 20px rgba(234, 179, 8, 0.25);
-      padding: 10px 18px;
+      padding: 8px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 10px;
+      flex-shrink: 0;
     }
     .banner-title {
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       font-weight: 900;
       letter-spacing: 2px;
       background: linear-gradient(180deg, #fff7b2 0%, #facc15 60%, #ca8a04 100%);
@@ -55,15 +56,15 @@
       background: rgba(10, 15, 30, 0.85);
       border: 2px solid #eab308;
       box-shadow: inset 0 0 12px rgba(234, 179, 8, 0.3);
-      padding: 6px 14px;
-      border-radius: 10px;
+      padding: 5px 12px;
+      border-radius: 8px;
       display: flex;
-      gap: 14px;
+      gap: 12px;
       align-items: center;
       flex-wrap: wrap;
     }
     .jackpot-item {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 800;
       color: #cbd5e1;
     }
@@ -73,23 +74,24 @@
     }
     .jackpot-item.total span {
       color: #4ade80;
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       text-shadow: 0 0 10px rgba(74, 222, 128, 0.6);
     }
 
     /* Barra de Control / Estado */
     header {
       background-color: rgba(15, 23, 42, 0.95);
-      padding: 8px 18px;
+      padding: 6px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid #334155;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
+      flex-shrink: 0;
     }
     .sub-title {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 700;
       color: #38bdf8;
       display: flex;
@@ -111,7 +113,7 @@
 
     .controls {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       align-items: center;
       flex-wrap: wrap;
     }
@@ -119,24 +121,21 @@
       background: linear-gradient(180deg, #2563eb, #1d4ed8);
       color: white;
       border: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 7px 14px;
-      border-radius: 8px;
+      padding: 6px 12px;
+      border-radius: 7px;
       font-weight: 800;
       cursor: pointer;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      font-size: 0.85rem;
-      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+      font-size: 0.8rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     }
     button:hover {
-      transform: translateY(-2px);
+      transform: translateY(-1px);
       filter: brightness(1.15);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
     }
-    button:active {
-      transform: translateY(0);
-    }
+    button:active { transform: translateY(0); }
     button.btn-danger { background: linear-gradient(180deg, #ef4444, #b91c1c); }
-    button.btn-success { background: linear-gradient(180deg, #22c55e, #15803d); font-size: 0.95rem; }
+    button.btn-success { background: linear-gradient(180deg, #22c55e, #15803d); }
     button.btn-purple { background: linear-gradient(180deg, #9333ea, #6b21a8); }
     button.btn-amber { background: linear-gradient(180deg, #f59e0b, #b45309); }
     button.btn-teal { background: linear-gradient(180deg, #0d9488, #115e59); }
@@ -144,36 +143,38 @@
     .toggle-label {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 0.85rem;
+      gap: 5px;
+      font-size: 0.8rem;
       font-weight: 600;
       cursor: pointer;
       background: #1e293b;
-      padding: 6px 10px;
-      border-radius: 8px;
+      padding: 5px 8px;
+      border-radius: 6px;
       border: 1px solid #475569;
     }
 
-    /* Tablero Principal */
+    /* Tablero Principal y Layout Fijo */
     main {
       flex: 1;
       display: flex;
-      padding: 12px;
-      gap: 12px;
-      height: calc(100vh - 130px);
+      padding: 10px;
+      gap: 10px;
+      min-height: 0; /* Evita que los hijos sobrepasen la altura calculada */
     }
 
     .grid-container {
-      flex: 2;
+      flex: 1.8;
       display: grid;
       grid-template-columns: repeat(10, 1fr);
       grid-template-rows: repeat(10, 1fr);
-      gap: 4px;
+      gap: 3px;
       background: rgba(15, 23, 42, 0.7);
-      padding: 8px;
-      border-radius: 12px;
+      padding: 6px;
+      border-radius: 10px;
       border: 1px solid #334155;
       box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.6);
+      height: 100%;
+      min-height: 0;
     }
     .ball-slot {
       display: flex;
@@ -181,12 +182,13 @@
       justify-content: center;
       background: radial-gradient(circle at 35% 35%, #27354a, #151d2c);
       color: #64748b;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 800;
-      border-radius: 6px;
-      transition: all 0.25s ease;
+      border-radius: 5px;
+      transition: all 0.2s ease;
       cursor: pointer;
       border: 1px solid rgba(255, 255, 255, 0.05);
+      min-height: 0;
     }
     .ball-slot:hover {
       color: #94a3b8;
@@ -196,83 +198,91 @@
       background: radial-gradient(circle at 35% 35%, #ffe600, #f59e0b 60%, #b45309);
       color: #050b14;
       font-weight: 900;
-      box-shadow: 0 0 12px rgba(245, 158, 11, 0.8), inset 0 2px 4px rgba(255, 255, 255, 0.6);
-      transform: scale(1.05);
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.8), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+      transform: scale(1.04);
       border-color: #fef08a;
       z-index: 2;
-      font-size: 1.15rem;
     }
 
-    /* Panel Lateral: Pantalla de bola y Video */
+    /* Panel Lateral Blindado Contra Deformaciones */
     .center-panel {
-      flex: 1;
+      flex: 1.2;
+      max-width: 450px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
+      height: 100%;
+      min-height: 0;
     }
     .display-box {
-      height: 150px;
+      height: 130px;
+      flex-shrink: 0;
       background: radial-gradient(circle at 50% 30%, #1e293b 0%, #0a0f1d 100%);
       border: 2px solid #38bdf8;
-      border-radius: 14px;
+      border-radius: 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 20px rgba(56, 189, 248, 0.25), inset 0 0 15px rgba(56, 189, 248, 0.15);
-      position: relative;
+      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.2);
     }
     .display-label {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 2px;
       color: #94a3b8;
       font-weight: 700;
     }
     .current-ball {
-      font-size: 4.2rem;
+      font-size: 3.5rem;
       font-weight: 900;
       color: #facc15;
       line-height: 1;
-      text-shadow: 0 0 20px rgba(250, 204, 21, 0.8), 2px 2px 4px #000;
-      margin: 4px 0;
+      text-shadow: 0 0 18px rgba(250, 204, 21, 0.8), 2px 2px 4px #000;
     }
     .counter {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 700;
       color: #38bdf8;
+      margin-top: 3px;
     }
 
     .camera-box {
       flex: 1;
       background-color: #030712;
-      border-radius: 14px;
+      border-radius: 12px;
       border: 2px solid #334155;
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
-      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
+      min-height: 0;
     }
     video {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;
-    }
-    .cam-placeholder {
-      color: #64748b;
-      font-size: 0.95rem;
-      font-weight: 600;
-      text-align: center;
-      padding: 10px;
+      object-fit: contain;
+      background: #000;
     }
     .banner-img {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
       object-fit: contain;
       background: #000;
       display: none;
+    }
+    .cam-placeholder {
+      color: #64748b;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: center;
+      padding: 10px;
+      z-index: 1;
     }
 
     /* Modales */
@@ -284,12 +294,12 @@
       justify-content: center;
       align-items: center;
       z-index: 9999;
-      backdrop-filter: blur(6px);
+      backdrop-filter: blur(5px);
     }
     .modal-box {
       background: #0f172a;
       border: 2px solid #38bdf8;
-      border-radius: 16px;
+      border-radius: 14px;
       width: 95%;
       max-width: 1050px;
       max-height: 92vh;
@@ -298,16 +308,16 @@
       box-shadow: 0 15px 35px rgba(0,0,0,0.7);
     }
     .modal-header {
-      padding: 14px 18px;
+      padding: 12px 16px;
       border-bottom: 2px solid #1e293b;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
     .modal-controls {
-      padding: 12px 18px;
+      padding: 10px 16px;
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
       flex-wrap: wrap;
       background: #090e17;
@@ -317,31 +327,28 @@
       background: #1e293b;
       color: white;
       border: 1px solid #475569;
-      padding: 7px 10px;
+      padding: 6px 9px;
       border-radius: 6px;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       outline: none;
-    }
-    .modal-controls select:focus, .jackpot-form input:focus {
-      border-color: #38bdf8;
     }
     .modal-body {
       flex: 1;
-      padding: 16px;
+      padding: 15px;
       overflow-y: auto;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 14px;
+      gap: 12px;
       background: #0b111e;
     }
 
-    /* Cartones de Bingo */
+    /* Cartones */
     .ticket {
       background: white;
       color: #111;
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 10px;
-      box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
       display: flex;
       flex-direction: column;
       page-break-inside: avoid;
@@ -349,11 +356,11 @@
     }
     .ticket-header {
       text-align: center;
-      padding: 6px 4px;
-      border-radius: 6px 6px 0 0;
+      padding: 5px 4px;
+      border-radius: 5px 5px 0 0;
       color: white;
       font-weight: 900;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       letter-spacing: 0.5px;
       text-transform: uppercase;
     }
@@ -366,12 +373,12 @@
     }
     .ticket-cell {
       border: 1.5px solid #cbd5e1;
-      height: 40px;
+      height: 38px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 800;
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       background: #ffffff;
       color: #0f172a;
       border-radius: 4px;
@@ -379,7 +386,7 @@
     .ticket-cell.empty {
       background-color: #f1f5f9;
       color: #cbd5e1;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
 
     /* Temáticas de Cartones */
@@ -392,7 +399,7 @@
     .theme-especial .ticket-header { background: linear-gradient(90deg, #b45309, #f59e0b, #d97706); color: #ffffff; }
     .theme-super .ticket-header { background: linear-gradient(90deg, #d946ef, #6366f1, #06b6d4); color: #ffffff; }
 
-    /* Alerta de Ganadores Estilo Neón */
+    /* Alerta de Ganadores */
     .winner-banner {
       position: fixed;
       top: 50%;
@@ -400,20 +407,20 @@
       transform: translate(-50%, -50%);
       background: linear-gradient(145deg, #0b1120, #1e1b4b);
       color: #f8fafc;
-      padding: 25px 30px;
-      border-radius: 20px;
+      padding: 22px 26px;
+      border-radius: 18px;
       box-shadow: 0 0 50px rgba(250, 204, 21, 0.7), 0 10px 30px rgba(0,0,0,0.9);
       z-index: 100000;
       text-align: center;
       display: none;
       border: 3px solid #facc15;
-      max-width: 500px;
+      max-width: 480px;
       width: 90%;
     }
     .winner-banner h1 {
-      font-size: 1.8rem;
+      font-size: 1.6rem;
       font-weight: 900;
-      margin-bottom: 15px;
+      margin-bottom: 12px;
       background: linear-gradient(180deg, #fef08a, #facc15, #eab308);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -421,49 +428,48 @@
     .winner-podium {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin: 15px 0;
+      gap: 8px;
+      margin: 12px 0;
     }
     .podium-place {
       background: #1e293b;
-      padding: 10px 14px;
-      border-radius: 8px;
+      padding: 8px 12px;
+      border-radius: 7px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 1rem;
+      font-size: 0.92rem;
       font-weight: 800;
       border: 1px solid #334155;
     }
-    .podium-place.first { border-left: 6px solid #facc15; color: #facc15; }
-    .podium-place.second { border-left: 6px solid #94a3b8; color: #e2e8f0; }
-    .podium-place.third { border-left: 6px solid #d97706; color: #fdba74; }
+    .podium-place.first { border-left: 5px solid #facc15; color: #facc15; }
+    .podium-place.second { border-left: 5px solid #94a3b8; color: #e2e8f0; }
+    .podium-place.third { border-left: 5px solid #d97706; color: #fdba74; }
 
     /* Modal Pozo */
     .jackpot-modal-box {
       background: #0f172a;
-      padding: 24px;
-      border-radius: 16px;
+      padding: 20px;
+      border-radius: 14px;
       border: 2px solid #eab308;
-      max-width: 480px;
+      max-width: 460px;
       width: 90%;
       display: flex;
       flex-direction: column;
-      gap: 14px;
-      box-shadow: 0 0 25px rgba(234, 179, 8, 0.2);
+      gap: 12px;
     }
     .jackpot-form {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      gap: 8px;
       text-align: left;
     }
     .jackpot-form label {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: #94a3b8;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
       font-weight: 600;
     }
 
@@ -478,20 +484,32 @@
     .a4-page .ticket-header { font-size: 1.15rem; padding: 10px; }
 
     @media (max-width: 768px) {
-      body { overflow-y: auto; height: auto; }
-      .banner-container { flex-direction: column; text-align: center; padding: 10px; }
-      .banner-title { font-size: 1.35rem; }
-      .jackpot-display { width: 100%; justify-content: space-around; gap: 8px; }
-      .jackpot-item { font-size: 0.75rem; }
-      .jackpot-item.total span { font-size: 1rem; }
-      main { flex-direction: column-reverse; height: auto; padding: 8px; }
-      .center-panel { flex-direction: row; gap: 8px; }
-      .display-box { flex: 1; height: 125px; }
-      .current-ball { font-size: 3rem; }
-      .camera-box { flex: 1; height: 125px; }
-      .grid-container { gap: 2px; padding: 4px; min-height: 380px; }
+      body { overflow-y: auto; height: auto; min-height: 100vh; }
+      .banner-container { flex-direction: column; text-align: center; padding: 8px; }
+      .banner-title { font-size: 1.3rem; }
+      .jackpot-display { width: 100%; justify-content: space-around; gap: 6px; }
+      main {
+        flex-direction: column-reverse;
+        height: auto;
+        padding: 6px;
+        min-height: initial;
+      }
+      .center-panel {
+        max-width: 100%;
+        height: auto;
+        flex-direction: row;
+        gap: 6px;
+      }
+      .display-box { flex: 1; height: 130px; }
+      .current-ball { font-size: 3.2rem; }
+      .camera-box { flex: 1; height: 130px; min-height: 130px; }
+      .grid-container {
+        height: 420px;
+        min-height: 420px;
+        gap: 2px;
+        padding: 4px;
+      }
       .ball-slot { font-size: 0.85rem; }
-      .ball-slot.active { font-size: 0.95rem; }
     }
 
     @media print {
@@ -571,13 +589,13 @@
       <div class="podium-place second"><span>🥈 2° Lugar:</span> <span id="podium2">Buscando...</span></div>
       <div class="podium-place third"><span>🥉 3° Lugar:</span> <span id="podium3">Buscando...</span></div>
     </div>
-    <button onclick="document.getElementById('winnerBanner').style.display='none'" class="btn-danger" style="font-size: 0.95rem; padding: 8px 18px;">Cerrar Notificación</button>
+    <button onclick="document.getElementById('winnerBanner').style.display='none'" class="btn-danger" style="font-size: 0.9rem; padding: 7px 16px;">Cerrar Notificación</button>
   </div>
 
   <!-- Modal Configuración de Pozo -->
   <div class="modal-overlay" id="jackpotModal">
     <div class="jackpot-modal-box">
-      <h2 style="color: #facc15; text-align: center; font-size: 1.3rem;">Configurar Pozo de Premios</h2>
+      <h2 style="color: #facc15; text-align: center; font-size: 1.25rem;">Configurar Pozo de Premios</h2>
       
       <div class="jackpot-form">
         <label>Precio por Cartón ($):
@@ -588,7 +606,7 @@
         </label>
       </div>
 
-      <button id="calcJackpotBtn" class="btn-teal" style="width: 100%; padding: 9px;">Calcular Distribución Automática (70% - 20% - 10%)</button>
+      <button id="calcJackpotBtn" class="btn-teal" style="width: 100%; padding: 8px;">Calcular Distribución (70% - 20% - 10%)</button>
 
       <div class="jackpot-form">
         <label style="grid-column: span 2;">Pozo Total a Repartir ($):
@@ -605,7 +623,7 @@
         </label>
       </div>
 
-      <div style="display: flex; gap: 10px; margin-top: 8px;">
+      <div style="display: flex; gap: 8px; margin-top: 6px;">
         <button id="saveJackpotBtn" class="btn-success" style="flex: 1;">Guardar y Publicar</button>
         <button onclick="document.getElementById('jackpotModal').style.display='none'" class="btn-danger">Cerrar</button>
       </div>
@@ -614,12 +632,12 @@
 
   <!-- Modal Transmisión QR / Enlace -->
   <div class="modal-overlay" id="streamModal">
-    <div style="background: #0f172a; padding: 22px; border-radius: 14px; border: 2px solid #38bdf8; max-width: 450px; width: 90%; text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; box-shadow: 0 0 25px rgba(56, 189, 248, 0.2);">
-      <h2 style="color: #38bdf8; font-size: 1.25rem;">📡 Transmisión en Vivo</h2>
-      <p style="font-size: 0.85rem; color: #cbd5e1;">Comparte este código QR o enlace con los espectadores:</p>
-      <div id="qrcode" style="background: white; padding: 10px; border-radius: 10px; display: inline-block;"></div>
-      <input type="text" id="streamLinkInput" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #475569; background: #1e293b; color: #38bdf8; font-weight: bold; text-align: center; font-size: 0.85rem;" readonly>
-      <div style="display: flex; gap: 10px; width: 100%;">
+    <div style="background: #0f172a; padding: 20px; border-radius: 14px; border: 2px solid #38bdf8; max-width: 420px; width: 90%; text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center;">
+      <h2 style="color: #38bdf8; font-size: 1.2rem;">📡 Transmisión en Vivo</h2>
+      <p style="font-size: 0.82rem; color: #cbd5e1;">Comparte este código QR o enlace con los espectadores:</p>
+      <div id="qrcode" style="background: white; padding: 8px; border-radius: 8px; display: inline-block;"></div>
+      <input type="text" id="streamLinkInput" style="width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid #475569; background: #1e293b; color: #38bdf8; font-weight: bold; text-align: center; font-size: 0.82rem;" readonly>
+      <div style="display: flex; gap: 8px; width: 100%;">
         <button id="copyStreamLinkBtn" class="btn-success" style="flex: 1;">📋 Copiar Enlace</button>
         <button onclick="document.getElementById('streamModal').style.display='none'" class="btn-danger">Cerrar</button>
       </div>
@@ -630,8 +648,8 @@
   <div class="modal-overlay" id="cardsModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h2 style="color: #38bdf8; font-size: 1.15rem;">Generador de Cartones Oficiales</h2>
-        <button id="closeModalBtn" class="btn-danger" style="padding: 4px 10px;">✕</button>
+        <h2 style="color: #38bdf8; font-size: 1.1rem;">Generador de Cartones Oficiales</h2>
+        <button id="closeModalBtn" class="btn-danger" style="padding: 3px 8px;">✕</button>
       </div>
 
       <div class="modal-controls">
@@ -649,7 +667,7 @@
         </label>
 
         <label>Cantidad:
-          <input type="number" id="cardQuantity" value="6" min="1" max="60" style="width: 65px;">
+          <input type="number" id="cardQuantity" value="6" min="1" max="60" style="width: 60px;">
         </label>
 
         <button id="generateCardsBtn" class="btn-success">Generar</button>
@@ -704,6 +722,7 @@
     const uploadBannerBtn = document.getElementById('uploadBannerBtn');
     const removeBannerBtn = document.getElementById('removeBannerBtn');
     const bannerImg = document.getElementById('bannerImg');
+    let currentBannerBase64 = null;
 
     let drawnNumbers = new Set();
     let stream = null;
@@ -885,6 +904,7 @@
       }
     }
 
+    // Carga y compresión optimizada para MQTT (no satura ni desconecta)
     uploadBannerBtn.addEventListener('click', () => bannerInput.click());
     bannerInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
@@ -892,10 +912,24 @@
         stopCamera();
         const reader = new FileReader();
         reader.onload = function(event) {
-          bannerImg.src = event.target.result;
-          bannerImg.style.display = 'block';
-          camPlaceholder.style.display = 'none';
-          removeBannerBtn.style.display = 'inline-block';
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 640;
+            const scale = Math.min(1, MAX_WIDTH / img.width);
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            // Comprime a JPEG 0.65 para no sobrepasar límites de MQTT
+            currentBannerBase64 = canvas.toDataURL('image/jpeg', 0.65);
+            bannerImg.src = currentBannerBase64;
+            bannerImg.style.display = 'block';
+            camPlaceholder.style.display = 'none';
+            removeBannerBtn.style.display = 'inline-block';
+            broadcastState();
+          };
+          img.src = event.target.result;
         };
         reader.readAsDataURL(file);
       }
@@ -903,7 +937,9 @@
 
     removeBannerBtn.addEventListener('click', () => {
       hideBanner();
+      currentBannerBase64 = null;
       bannerInput.value = '';
+      broadcastState();
     });
 
     function hideBanner() {
@@ -1120,6 +1156,7 @@
           current: currentBallElem.textContent,
           jackpot: jackpotData,
           winners: winnersList,
+          bannerSrc: currentBannerBase64,
           showBanner: winnerBanner.style.display === 'block'
         });
 
@@ -1148,6 +1185,17 @@
       if (data.winners) {
         winnersList = data.winners;
         updatePodiumUI();
+      }
+
+      // Sincronización del banner en espectadores sin romper el tamaño
+      if (data.bannerSrc) {
+        bannerImg.src = data.bannerSrc;
+        bannerImg.style.display = 'block';
+        camPlaceholder.style.display = 'none';
+      } else {
+        bannerImg.style.display = 'none';
+        bannerImg.src = '';
+        if (!stream) camPlaceholder.style.display = 'block';
       }
 
       if (data.showBanner) {
