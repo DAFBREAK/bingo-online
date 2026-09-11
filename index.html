@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>BINGOS ONLINE - 100 Bolas</title>
+  <!-- html2canvas para exportar cartones -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Paho MQTT para sincronización universal -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+  <!-- QRCode.js para compartir enlace -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body {
+      background: radial-gradient(circle at 50% 10%, #151d38 0%, #080d1a 100%);
+      color: #f8fafc;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Banner Superior Estilo Casino */
+    .banner-container {
+      background: linear-gradient(90deg, #1e1035 0%, #0f1c3f 50%, #1a0f30 100%);
+      border-bottom: 2px solid #eab308;
+      box-shadow: 0 4px 20px rgba(234, 179, 8, 0.25);
+      padding: 10px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .banner-title {
+      font-size: 1.6rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      background: linear-gradient(180deg, #fff7b2 0%, #facc15 60%, #ca8a04 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 8px rgba(250, 204, 21, 0.5));
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .jackpot-display {
+      background: rgba(10, 15, 30, 0.85);
+      border: 2px solid #eab308;
+      box-shadow: inset 0 0 12px rgba(234, 179, 8, 0.3);
+      padding: 6px 14px;
+      border-radius: 10px;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .jackpot-item {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #cbd5e1;
+    }
+    .jackpot-item span {
+      color: #38bdf8;
+      font-weight: 900;
+    }
+    .jackpot-item.total span {
+      color: #4ade80;
+      font-size: 1.25rem;
+      text-shadow: 0 0 10px rgba(74, 222, 128, 0.6);
+    }
+
+    /* Barra de Control / Estado */
+    header {
+      background-color: rgba(15, 23, 42, 0.95);
+      padding: 8px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #334155;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sub-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ef4444;
+      display: inline-block;
+      box-shadow: 0 0 6px #ef4444;
+    }
+    .status-dot.online {
+      background: #22c55e;
+      box-shadow: 0 0 10px #22c55e;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    button {
+      background: linear-gradient(180deg, #2563eb, #1d4ed8);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 0.85rem;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+    }
+    button:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.15);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    }
+    button:active {
+      transform: translateY(0);
+    }
+    button.btn-danger { background: linear-gradient(180deg, #ef4444, #b91c1c); }
+    button.btn-success { background: linear-gradient(180deg, #22c55e, #15803d); font-size: 0.95rem; }
+    button.btn-purple { background: linear-gradient(180deg, #9333ea, #6b21a8); }
+    button.btn-amber { background: linear-gradient(180deg, #f59e0b, #b45309); }
+    button.btn-teal { background: linear-gradient(180deg, #0d9488, #115e59); }
+
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: #1e293b;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid #475569;
+    }
+
+    /* Tablero Principal */
+    main {
+      flex: 1;
+      display: flex;
+      padding: 12px;
+      gap: 12px;
+      height: calc(100vh - 130px);
+    }
+
+    .grid-container {
+      flex: 2;
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      grid-template-rows: repeat(10, 1fr);
+      gap: 4px;
+      background: rgba(15, 23, 42, 0.7);
+      padding: 8px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.6);
+    }
+    .ball-slot {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 35% 35%, #27354a, #151d2c);
+      color: #64748b;
+      font-size: 1rem;
+      font-weight: 800;
+      border-radius: 6px;
+      transition: all 0.25s ease;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .ball-slot:hover {
+      color: #94a3b8;
+      border-color: #475569;
+    }
+    .ball-slot.active {
+      background: radial-gradient(circle at 35% 35%, #ffe600, #f59e0b 60%, #b45309);
+      color: #050b14;
+      font-weight: 900;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.8), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+      transform: scale(1.05);
+      border-color: #fef08a;
+      z-index: 2;
+      font-size: 1.15rem;
+    }
+
+    /* Panel Lateral: Pantalla de bola y Video */
+    .center-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .display-box {
+      height: 150px;
+      background: radial-gradient(circle at 50% 30%, #1e293b 0%, #0a0f1d 100%);
+      border: 2px solid #38bdf8;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(56, 189, 248, 0.25), inset 0 0 15px rgba(56, 189, 248, 0.15);
+      position: relative;
+    }
+    .display-label {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #94a3b8;
+      font-weight: 700;
+    }
+    .current-ball {
+      font-size: 4.2rem;
+      font-weight: 900;
+      color: #facc15;
+      line-height: 1;
+      text-shadow: 0 0 20px rgba(250, 204, 21, 0.8), 2px 2px 4px #000;
+      margin: 4px 0;
+    }
+    .counter {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #38bdf8;
+    }
+
+    .camera-box {
+      flex: 1;
+      background-color: #030712;
+      border-radius: 14px;
+      border: 2px solid #334155;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .cam-placeholder {
+      color: #64748b;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-align: center;
+      padding: 10px;
+    }
+    .banner-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+      display: none;
+    }
+
+    /* Modales */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 8, 20, 0.88);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      backdrop-filter: blur(6px);
+    }
+    .modal-box {
+      background: #0f172a;
+      border: 2px solid #38bdf8;
+      border-radius: 16px;
+      width: 95%;
+      max-width: 1050px;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.7);
+    }
+    .modal-header {
+      padding: 14px 18px;
+      border-bottom: 2px solid #1e293b;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-controls {
+      padding: 12px 18px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      background: #090e17;
+      border-bottom: 1px solid #1e293b;
+    }
+    .modal-controls select, .modal-controls input, .jackpot-form input {
+      background: #1e293b;
+      color: white;
+      border: 1px solid #475569;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .modal-controls select:focus, .jackpot-form input:focus {
+      border-color: #38bdf8;
+    }
+    .modal-body {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      background: #0b111e;
+    }
+
+    /* Cartones de Bingo */
+    .ticket {
+      background: white;
+      color: #111;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      page-break-inside: avoid;
+      border: 2px solid #e2e8f0;
+    }
+    .ticket-header {
+      text-align: center;
+      padding: 6px 4px;
+      border-radius: 6px 6px 0 0;
+      color: white;
+      font-weight: 900;
+      font-size: 0.9rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .ticket-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .ticket-cell {
+      border: 1.5px solid #cbd5e1;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.25rem;
+      background: #ffffff;
+      color: #0f172a;
+      border-radius: 4px;
+    }
+    .ticket-cell.empty {
+      background-color: #f1f5f9;
+      color: #cbd5e1;
+      font-size: 0.9rem;
+    }
+
+    /* Temáticas de Cartones */
+    .theme-nino .ticket-header { background: linear-gradient(90deg, #ec4899, #8b5cf6); }
+    .theme-padre .ticket-header { background: linear-gradient(90deg, #1e3a8a, #2563eb); }
+    .theme-madre .ticket-header { background: linear-gradient(90deg, #f43f5e, #fb7185); }
+    .theme-primavera .ticket-header { background: linear-gradient(90deg, #059669, #10b981); color: #022c22; }
+    .theme-navidad .ticket-header { background: linear-gradient(90deg, #dc2626, #16a34a); }
+    .theme-anonuevo .ticket-header { background: linear-gradient(90deg, #111827, #d97706); color: #fef08a; }
+    .theme-especial .ticket-header { background: linear-gradient(90deg, #b45309, #f59e0b, #d97706); color: #ffffff; }
+    .theme-super .ticket-header { background: linear-gradient(90deg, #d946ef, #6366f1, #06b6d4); color: #ffffff; }
+
+    /* Alerta de Ganadores Estilo Neón */
+    .winner-banner {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(145deg, #0b1120, #1e1b4b);
+      color: #f8fafc;
+      padding: 25px 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 50px rgba(250, 204, 21, 0.7), 0 10px 30px rgba(0,0,0,0.9);
+      z-index: 100000;
+      text-align: center;
+      display: none;
+      border: 3px solid #facc15;
+      max-width: 500px;
+      width: 90%;
+    }
+    .winner-banner h1 {
+      font-size: 1.8rem;
+      font-weight: 900;
+      margin-bottom: 15px;
+      background: linear-gradient(180deg, #fef08a, #facc15, #eab308);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .winner-podium {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 15px 0;
+    }
+    .podium-place {
+      background: #1e293b;
+      padding: 10px 14px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1rem;
+      font-weight: 800;
+      border: 1px solid #334155;
+    }
+    .podium-place.first { border-left: 6px solid #facc15; color: #facc15; }
+    .podium-place.second { border-left: 6px solid #94a3b8; color: #e2e8f0; }
+    .podium-place.third { border-left: 6px solid #d97706; color: #fdba74; }
+
+    /* Modal Pozo */
+    .jackpot-modal-box {
+      background: #0f172a;
+      padding: 24px;
+      border-radius: 16px;
+      border: 2px solid #eab308;
+      max-width: 480px;
+      width: 90%;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 0 25px rgba(234, 179, 8, 0.2);
+    }
+    .jackpot-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      text-align: left;
+    }
+    .jackpot-form label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-weight: 600;
+    }
+
+    #exportContainer { position: absolute; left: -9999px; top: -9999px; }
+    .a4-page {
+      width: 794px; height: 1123px; background: #ffffff;
+      padding: 40px 30px; display: flex; flex-direction: column;
+      justify-content: space-around; gap: 20px; box-sizing: border-box;
+    }
+    .a4-page .ticket { border: 2px solid #0f172a; box-shadow: none; padding: 14px; }
+    .a4-page .ticket-cell { height: 52px; font-size: 1.45rem; border: 2px solid #94a3b8; }
+    .a4-page .ticket-header { font-size: 1.15rem; padding: 10px; }
+
+    @media (max-width: 768px) {
+      body { overflow-y: auto; height: auto; }
+      .banner-container { flex-direction: column; text-align: center; padding: 10px; }
+      .banner-title { font-size: 1.35rem; }
+      .jackpot-display { width: 100%; justify-content: space-around; gap: 8px; }
+      .jackpot-item { font-size: 0.75rem; }
+      .jackpot-item.total span { font-size: 1rem; }
+      main { flex-direction: column-reverse; height: auto; padding: 8px; }
+      .center-panel { flex-direction: row; gap: 8px; }
+      .display-box { flex: 1; height: 125px; }
+      .current-ball { font-size: 3rem; }
+      .camera-box { flex: 1; height: 125px; }
+      .grid-container { gap: 2px; padding: 4px; min-height: 380px; }
+      .ball-slot { font-size: 0.85rem; }
+      .ball-slot.active { font-size: 0.95rem; }
+    }
+
+    @media print {
+      body * { visibility: hidden; }
+      #printArea, #printArea * { visibility: visible; }
+      #printArea {
+        position: absolute; left: 0; top: 0; width: 100%;
+        background: white !important; display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important; gap: 15px !important; padding: 10px !important;
+      }
+      .ticket { border: 2px solid #000 !important; box-shadow: none !important; }
+      .ticket-cell.empty { background-color: #f1f5f9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .ticket-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="banner-container">
+    <div class="banner-title">🎰 BINGOS ONLINE 🎰</div>
+    <div class="jackpot-display">
+      <div class="jackpot-item total">💰 POZO: <span id="displayTotalJackpot">$0</span></div>
+      <div class="jackpot-item">🥇 1°: <span id="display1st">$0</span></div>
+      <div class="jackpot-item">🥈 2°: <span id="display2nd">$0</span></div>
+      <div class="jackpot-item">🥉 3°: <span id="display3rd">$0</span></div>
+    </div>
+  </div>
+
+  <header>
+    <div class="sub-title" id="hostTitle">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Conectando...</span>
+    </div>
+    <div class="controls" id="hostControls">
+      <label class="toggle-label">
+        <input type="checkbox" id="manualModeCheck">
+        Manual
+      </label>
+      <button id="drawBtn" class="btn-success">🎲 Sacar Bola</button>
+      <button id="openJackpotBtn" class="btn-amber">💰 Pozo</button>
+      <button id="camBtn">📹 Cámara</button>
+      
+      <input type="file" id="bannerInput" accept="image/*" style="display: none;">
+      <button id="uploadBannerBtn" class="btn-teal">🖼️ Banner</button>
+      <button id="removeBannerBtn" class="btn-danger" style="display: none;">❌ Quitar Banner</button>
+
+      <button id="streamBtn" class="btn-purple">📡 Transmitir</button>
+      <button id="fullscreenBtn">⛶ Pantalla</button>
+      <button id="openCardsBtn" class="btn-purple">🖨️ Cartones</button>
+      <button id="resetBtn" class="btn-danger">🔄 Reiniciar</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="grid-container" id="grid"></div>
+
+    <div class="center-panel">
+      <div class="display-box">
+        <div class="display-label">Última Bola</div>
+        <div class="current-ball" id="currentBall">--</div>
+        <div class="counter" id="ballCount">Salieron: 0 / 100</div>
+      </div>
+
+      <div class="camera-box">
+        <video id="webcam" autoplay playsinline muted style="display: none;"></video>
+        <img id="bannerImg" class="banner-img" alt="Banner Oficial">
+        <div id="camPlaceholder" class="cam-placeholder">Cámara / Banner no activo</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Notificación de Ganadores -->
+  <div class="winner-banner" id="winnerBanner">
+    <h1>🎉 ¡¡TENEMOS GANADORES!! 🎉</h1>
+    <div class="winner-podium" id="winnerPodium">
+      <div class="podium-place first"><span>🥇 1° Lugar:</span> <span id="podium1">Buscando...</span></div>
+      <div class="podium-place second"><span>🥈 2° Lugar:</span> <span id="podium2">Buscando...</span></div>
+      <div class="podium-place third"><span>🥉 3° Lugar:</span> <span id="podium3">Buscando...</span></div>
+    </div>
+    <button onclick="document.getElementById('winnerBanner').style.display='none'" class="btn-danger" style="font-size: 0.95rem; padding: 8px 18px;">Cerrar Notificación</button>
+  </div>
+
+  <!-- Modal Configuración de Pozo -->
+  <div class="modal-overlay" id="jackpotModal">
+    <div class="jackpot-modal-box">
+      <h2 style="color: #facc15; text-align: center; font-size: 1.3rem;">Configurar Pozo de Premios</h2>
+      
+      <div class="jackpot-form">
+        <label>Precio por Cartón ($):
+          <input type="number" id="ticketPriceInput" value="500" min="0">
+        </label>
+        <label>Cartones Vendidos:
+          <input type="number" id="ticketsSoldInput" value="0" min="0">
+        </label>
+      </div>
+
+      <button id="calcJackpotBtn" class="btn-teal" style="width: 100%; padding: 9px;">Calcular Distribución Automática (70% - 20% - 10%)</button>
+
+      <div class="jackpot-form">
+        <label style="grid-column: span 2;">Pozo Total a Repartir ($):
+          <input type="number" id="customJackpotInput" value="0" min="0">
+        </label>
+        <label>Premio 1° Lugar ($):
+          <input type="number" id="prize1Input" value="0">
+        </label>
+        <label>Premio 2° Lugar ($):
+          <input type="number" id="prize2Input" value="0">
+        </label>
+        <label style="grid-column: span 2;">Premio 3° Lugar ($):
+          <input type="number" id="prize3Input" value="0">
+        </label>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 8px;">
+        <button id="saveJackpotBtn" class="btn-success" style="flex: 1;">Guardar y Publicar</button>
+        <button onclick="document.getElementById('jackpotModal').style.display='none'" class="btn-danger">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Transmisión QR / Enlace -->
+  <div class="modal-overlay" id="streamModal">
+    <div style="background: #0f172a; padding: 22px; border-radius: 14px; border: 2px solid #38bdf8; max-width: 450px; width: 90%; text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; box-shadow: 0 0 25px rgba(56, 189, 248, 0.2);">
+      <h2 style="color: #38bdf8; font-size: 1.25rem;">📡 Transmisión en Vivo</h2>
+      <p style="font-size: 0.85rem; color: #cbd5e1;">Comparte este código QR o enlace con los espectadores:</p>
+      <div id="qrcode" style="background: white; padding: 10px; border-radius: 10px; display: inline-block;"></div>
+      <input type="text" id="streamLinkInput" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #475569; background: #1e293b; color: #38bdf8; font-weight: bold; text-align: center; font-size: 0.85rem;" readonly>
+      <div style="display: flex; gap: 10px; width: 100%;">
+        <button id="copyStreamLinkBtn" class="btn-success" style="flex: 1;">📋 Copiar Enlace</button>
+        <button onclick="document.getElementById('streamModal').style.display='none'" class="btn-danger">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Cartones -->
+  <div class="modal-overlay" id="cardsModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 style="color: #38bdf8; font-size: 1.15rem;">Generador de Cartones Oficiales</h2>
+        <button id="closeModalBtn" class="btn-danger" style="padding: 4px 10px;">✕</button>
+      </div>
+
+      <div class="modal-controls">
+        <label>Temática:
+          <select id="themeSelect">
+            <option value="theme-especial">🏆 Bingos Online - Especial</option>
+            <option value="theme-super">⚡ Bingos Online - Súper Bingo</option>
+            <option value="theme-nino">🎈 Bingos Online - Día del Niño</option>
+            <option value="theme-padre">👔 Bingos Online - Día del Padre</option>
+            <option value="theme-madre">🌸 Bingos Online - Día de la Madre</option>
+            <option value="theme-primavera">🌻 Bingos Online - Primavera</option>
+            <option value="theme-navidad">🎄 Bingos Online - Navidad</option>
+            <option value="theme-anonuevo">🎆 Bingos Online - Año Nuevo</option>
+          </select>
+        </label>
+
+        <label>Cantidad:
+          <input type="number" id="cardQuantity" value="6" min="1" max="60" style="width: 65px;">
+        </label>
+
+        <button id="generateCardsBtn" class="btn-success">Generar</button>
+        <button id="downloadImagesBtn" class="btn-amber">📸 Descargar (3 por A4)</button>
+        <button id="printCardsBtn" class="btn-purple">🖨️ Imprimir</button>
+      </div>
+
+      <div class="modal-body" id="printArea"></div>
+    </div>
+  </div>
+
+  <div id="exportContainer"></div>
+
+  <script>
+    const grid = document.getElementById('grid');
+    const currentBallElem = document.getElementById('currentBall');
+    const ballCountElem = document.getElementById('ballCount');
+    const drawBtn = document.getElementById('drawBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const manualModeCheck = document.getElementById('manualModeCheck');
+    const camBtn = document.getElementById('camBtn');
+    const webcam = document.getElementById('webcam');
+    const camPlaceholder = document.getElementById('camPlaceholder');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const winnerBanner = document.getElementById('winnerBanner');
+
+    const podium1 = document.getElementById('podium1');
+    const podium2 = document.getElementById('podium2');
+    const podium3 = document.getElementById('podium3');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+
+    const openJackpotBtn = document.getElementById('openJackpotBtn');
+    const jackpotModal = document.getElementById('jackpotModal');
+    const ticketPriceInput = document.getElementById('ticketPriceInput');
+    const ticketsSoldInput = document.getElementById('ticketsSoldInput');
+    const calcJackpotBtn = document.getElementById('calcJackpotBtn');
+    const customJackpotInput = document.getElementById('customJackpotInput');
+    const prize1Input = document.getElementById('prize1Input');
+    const prize2Input = document.getElementById('prize2Input');
+    const prize3Input = document.getElementById('prize3Input');
+    const saveJackpotBtn = document.getElementById('saveJackpotBtn');
+
+    const displayTotalJackpot = document.getElementById('displayTotalJackpot');
+    const display1st = document.getElementById('display1st');
+    const display2nd = document.getElementById('display2nd');
+    const display3rd = document.getElementById('display3rd');
+
+    let jackpotData = { total: 0, p1: 0, p2: 0, p3: 0 };
+
+    const bannerInput = document.getElementById('bannerInput');
+    const uploadBannerBtn = document.getElementById('uploadBannerBtn');
+    const removeBannerBtn = document.getElementById('removeBannerBtn');
+    const bannerImg = document.getElementById('bannerImg');
+
+    let drawnNumbers = new Set();
+    let stream = null;
+    let registeredCards = [];
+    let winnersList = [];
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let roomId = urlParams.get('game');
+    const isViewer = Boolean(roomId);
+
+    if (!roomId) {
+      roomId = 'bingo_' + Math.random().toString(36).substring(2, 9);
+    }
+
+    const mqttTopic = `bingos_online_stream/${roomId}`;
+
+    function playWinSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, index) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.frequency.value = freq;
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(audioCtx.currentTime + index * 0.15);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + index * 0.15 + 0.4);
+          osc.stop(audioCtx.currentTime + index * 0.15 + 0.45);
+        });
+      } catch(e) {}
+    }
+
+    for (let i = 1; i <= 100; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'ball-slot';
+      slot.id = `ball-${i}`;
+      slot.textContent = i;
+      slot.addEventListener('click', () => { if (!isViewer) toggleManual(i); });
+      grid.appendChild(slot);
+    }
+
+    function checkWinners() {
+      if (registeredCards.length === 0 || winnersList.length >= 3) return;
+      let newWinnerFound = false;
+
+      registeredCards.forEach(card => {
+        const alreadyWon = winnersList.some(w => w.id === card.id);
+        if (!alreadyWon) {
+          const isWinner = card.numbers.every(num => drawnNumbers.has(num));
+          if (isWinner && winnersList.length < 3) {
+            winnersList.push({ id: card.id, place: winnersList.length + 1 });
+            newWinnerFound = true;
+          }
+        }
+      });
+
+      if (newWinnerFound) {
+        updatePodiumUI();
+        winnerBanner.style.display = 'block';
+        playWinSound();
+        broadcastState();
+      }
+    }
+
+    function updatePodiumUI() {
+      const w1 = winnersList.find(w => w.place === 1);
+      const w2 = winnersList.find(w => w.place === 2);
+      const w3 = winnersList.find(w => w.place === 3);
+
+      podium1.textContent = w1 ? `Cartón N° ${String(w1.id).padStart(3, '0')} ($${jackpotData.p1.toLocaleString()})` : 'Buscando...';
+      podium2.textContent = w2 ? `Cartón N° ${String(w2.id).padStart(3, '0')} ($${jackpotData.p2.toLocaleString()})` : 'Buscando...';
+      podium3.textContent = w3 ? `Cartón N° ${String(w3.id).padStart(3, '0')} ($${jackpotData.p3.toLocaleString()})` : 'Buscando...';
+    }
+
+    function toggleManual(num) {
+      if (!manualModeCheck.checked) return;
+      if (drawnNumbers.has(num)) {
+        drawnNumbers.delete(num);
+        document.getElementById(`ball-${num}`).classList.remove('active');
+      } else {
+        drawnNumbers.add(num);
+        document.getElementById(`ball-${num}`).classList.add('active');
+        currentBallElem.textContent = num;
+      }
+      updateCount();
+      checkWinners();
+      broadcastState();
+    }
+
+    drawBtn.addEventListener('click', () => {
+      if (drawnNumbers.size >= 100) return alert('¡Ya salieron todas las bolas!');
+      let randomNum;
+      do {
+        randomNum = Math.floor(Math.random() * 100) + 1;
+      } while (drawnNumbers.has(randomNum));
+
+      drawnNumbers.add(randomNum);
+      document.getElementById(`ball-${randomNum}`).classList.add('active');
+      currentBallElem.textContent = randomNum;
+      updateCount();
+      checkWinners();
+      broadcastState();
+    });
+
+    function updateCount() {
+      ballCountElem.textContent = `Salieron: ${drawnNumbers.size} / 100`;
+    }
+
+    resetBtn.addEventListener('click', () => {
+      if (confirm('¿Deseas reiniciar el juego? Se limpiarán las bolas y ganadores.')) {
+        drawnNumbers.clear();
+        winnersList = [];
+        document.querySelectorAll('.ball-slot').forEach(el => el.classList.remove('active'));
+        currentBallElem.textContent = '--';
+        winnerBanner.style.display = 'none';
+        updatePodiumUI();
+        updateCount();
+        broadcastState();
+      }
+    });
+
+    openJackpotBtn.addEventListener('click', () => jackpotModal.style.display = 'flex');
+
+    calcJackpotBtn.addEventListener('click', () => {
+      const price = parseFloat(ticketPriceInput.value) || 0;
+      const sold = parseInt(ticketsSoldInput.value) || 0;
+      const total = price * sold;
+      customJackpotInput.value = total;
+      prize1Input.value = Math.round(total * 0.70);
+      prize2Input.value = Math.round(total * 0.20);
+      prize3Input.value = Math.round(total * 0.10);
+    });
+
+    saveJackpotBtn.addEventListener('click', () => {
+      jackpotData.total = parseFloat(customJackpotInput.value) || 0;
+      jackpotData.p1 = parseFloat(prize1Input.value) || 0;
+      jackpotData.p2 = parseFloat(prize2Input.value) || 0;
+      jackpotData.p3 = parseFloat(prize3Input.value) || 0;
+
+      updateJackpotDisplay();
+      updatePodiumUI();
+      jackpotModal.style.display = 'none';
+      broadcastState();
+    });
+
+    function updateJackpotDisplay() {
+      displayTotalJackpot.textContent = `$${jackpotData.total.toLocaleString()}`;
+      display1st.textContent = `$${jackpotData.p1.toLocaleString()}`;
+      display2nd.textContent = `$${jackpotData.p2.toLocaleString()}`;
+      display3rd.textContent = `$${jackpotData.p3.toLocaleString()}`;
+    }
+
+    camBtn.addEventListener('click', async () => {
+      if (stream) {
+        stopCamera();
+      } else {
+        hideBanner();
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          webcam.srcObject = stream;
+          webcam.style.display = 'block';
+          camPlaceholder.style.display = 'none';
+          camBtn.textContent = 'Apagar Cámara';
+        } catch (err) {
+          alert('No se pudo acceder a la cámara: ' + err.message);
+        }
+      }
+    });
+
+    function stopCamera() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        webcam.srcObject = null;
+        stream = null;
+        webcam.style.display = 'none';
+        if (bannerImg.style.display !== 'block') camPlaceholder.style.display = 'block';
+        camBtn.textContent = '📹 Cámara';
+      }
+    }
+
+    uploadBannerBtn.addEventListener('click', () => bannerInput.click());
+    bannerInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        stopCamera();
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          bannerImg.src = event.target.result;
+          bannerImg.style.display = 'block';
+          camPlaceholder.style.display = 'none';
+          removeBannerBtn.style.display = 'inline-block';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    removeBannerBtn.addEventListener('click', () => {
+      hideBanner();
+      bannerInput.value = '';
+    });
+
+    function hideBanner() {
+      bannerImg.style.display = 'none';
+      bannerImg.src = '';
+      removeBannerBtn.style.display = 'none';
+      if (!stream) camPlaceholder.style.display = 'block';
+    }
+
+    fullscreenBtn.addEventListener('click', () => {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+      else document.exitFullscreen();
+    });
+
+    const cardsModal = document.getElementById('cardsModal');
+    const openCardsBtn = document.getElementById('openCardsBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const generateCardsBtn = document.getElementById('generateCardsBtn');
+    const printCardsBtn = document.getElementById('printCardsBtn');
+    const downloadImagesBtn = document.getElementById('downloadImagesBtn');
+    const themeSelect = document.getElementById('themeSelect');
+    const cardQuantity = document.getElementById('cardQuantity');
+    const printArea = document.getElementById('printArea');
+    const exportContainer = document.getElementById('exportContainer');
+
+    const themeTitles = {
+      'theme-especial': '🏆 BINGOS ONLINE - BINGO ESPECIAL 🏆',
+      'theme-super': '⚡ BINGOS ONLINE - SÚPER BINGO ⚡',
+      'theme-nino': '🎈 BINGOS ONLINE - DÍA DEL NIÑO 🎈',
+      'theme-padre': '👔 BINGOS ONLINE - DÍA DEL PADRE 👔',
+      'theme-madre': '🌸 BINGOS ONLINE - DÍA DE LA MADRE 🌸',
+      'theme-primavera': '🌻 BINGOS ONLINE - PRIMAVERA 🌻',
+      'theme-navidad': '🎄 BINGOS ONLINE - NAVIDAD 🎄',
+      'theme-anonuevo': '🎆 BINGOS ONLINE - AÑO NUEVO 🎆'
+    };
+
+    openCardsBtn.addEventListener('click', () => {
+      cardsModal.style.display = 'flex';
+      if (printArea.children.length === 0) buildCards();
+    });
+
+    closeModalBtn.addEventListener('click', () => cardsModal.style.display = 'none');
+    generateCardsBtn.addEventListener('click', buildCards);
+    printCardsBtn.addEventListener('click', () => window.print());
+
+    function createTicketElement(index, themeClass, themeText) {
+      const ticket = document.createElement('div');
+      ticket.className = `ticket ${themeClass}`;
+
+      const header = document.createElement('div');
+      header.className = 'ticket-header';
+      header.textContent = `${themeText} | N° ${String(index).padStart(3, '0')}`;
+
+      const gridEl = document.createElement('div');
+      gridEl.className = 'ticket-grid';
+
+      const cardNumbers = new Set();
+      while (cardNumbers.size < 9) cardNumbers.add(Math.floor(Math.random() * 100) + 1);
+      const sortedNums = Array.from(cardNumbers).sort((a, b) => a - b);
+
+      registeredCards.push({ id: index, numbers: sortedNums });
+
+      let numIndex = 0;
+      for (let row = 0; row < 3; row++) {
+        const activeCols = new Set();
+        while (activeCols.size < 3) activeCols.add(Math.floor(Math.random() * 5));
+
+        for (let col = 0; col < 5; col++) {
+          const cell = document.createElement('div');
+          cell.className = 'ticket-cell';
+          if (activeCols.has(col)) {
+            cell.textContent = sortedNums[numIndex++];
+          } else {
+            cell.classList.add('empty');
+            cell.textContent = '★';
+          }
+          gridEl.appendChild(cell);
+        }
+      }
+
+      ticket.appendChild(header);
+      ticket.appendChild(gridEl);
+      return ticket;
+    }
+
+    function buildCards() {
+      printArea.innerHTML = '';
+      registeredCards = [];
+      winnersList = [];
+      updatePodiumUI();
+
+      const qty = parseInt(cardQuantity.value) || 6;
+      ticketsSoldInput.value = qty;
+      const themeClass = themeSelect.value;
+      const themeText = themeTitles[themeClass];
+
+      for (let i = 1; i <= qty; i++) {
+        const ticket = createTicketElement(i, themeClass, themeText);
+        printArea.appendChild(ticket);
+      }
+    }
+
+    downloadImagesBtn.addEventListener('click', async () => {
+      const tickets = Array.from(printArea.children);
+      if (tickets.length === 0) return alert('Primero genera los cartones.');
+
+      downloadImagesBtn.disabled = true;
+      const orig = downloadImagesBtn.textContent;
+      downloadImagesBtn.textContent = '⏳ Procesando...';
+
+      const groups = [];
+      for (let i = 0; i < tickets.length; i += 3) groups.push(tickets.slice(i, i + 3));
+
+      for (let pageIdx = 0; pageIdx < groups.length; pageIdx++) {
+        exportContainer.innerHTML = '';
+        const a4Page = document.createElement('div');
+        a4Page.className = 'a4-page';
+        groups[pageIdx].forEach(t => a4Page.appendChild(t.cloneNode(true)));
+        exportContainer.appendChild(a4Page);
+
+        const canvas = await html2canvas(a4Page, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+        const link = document.createElement('a');
+        link.download = `Bingos_Online_Cartones_Pagina_${pageIdx + 1}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        await new Promise(r => setTimeout(r, 400));
+      }
+
+      exportContainer.innerHTML = '';
+      downloadImagesBtn.disabled = false;
+      downloadImagesBtn.textContent = orig;
+    });
+
+    // ==========================================
+    // TRANSMISIÓN EMQX MQTT (Puerto 8084 WSS)
+    // ==========================================
+    const streamBtn = document.getElementById('streamBtn');
+    const streamModal = document.getElementById('streamModal');
+    const streamLinkInput = document.getElementById('streamLinkInput');
+    const copyStreamLinkBtn = document.getElementById('copyStreamLinkBtn');
+
+    const clientUniqueId = 'bingo_' + Math.random().toString(36).substring(2, 10);
+    const mqttClient = new Paho.MQTT.Client('broker.emqx.io', 8084, '/mqtt', clientUniqueId);
+
+    mqttClient.onConnectionLost = (responseObject) => {
+      statusDot.classList.remove('online');
+      statusText.textContent = 'Reconectando...';
+      if (responseObject.errorCode !== 0) {
+        setTimeout(connectMqtt, 2000);
+      }
+    };
+
+    mqttClient.onMessageArrived = (message) => {
+      try {
+        const data = JSON.parse(message.payloadString);
+        applyRemoteState(data);
+      } catch (err) {}
+    };
+
+    function connectMqtt() {
+      mqttClient.connect({
+        useSSL: true,
+        timeout: 5,
+        onSuccess: () => {
+          statusDot.classList.add('online');
+          statusText.textContent = isViewer ? 'En Vivo (Espectador)' : 'Tablero Oficial 1 a 100';
+          
+          mqttClient.subscribe(mqttTopic);
+          
+          if (!isViewer) {
+            broadcastState();
+          }
+        },
+        onFailure: () => {
+          statusDot.classList.remove('online');
+          statusText.textContent = 'Error de conexión';
+          setTimeout(connectMqtt, 3000);
+        }
+      });
+    }
+
+    connectMqtt();
+
+    if (!isViewer) {
+      const shareUrl = `${window.location.origin}${window.location.pathname}?game=${roomId}`;
+      streamLinkInput.value = shareUrl;
+      document.getElementById('qrcode').innerHTML = '';
+      new QRCode(document.getElementById('qrcode'), {
+        text: shareUrl,
+        width: 160,
+        height: 160
+      });
+
+      streamBtn.addEventListener('click', () => {
+        streamModal.style.display = 'flex';
+      });
+
+      copyStreamLinkBtn.addEventListener('click', () => {
+        streamLinkInput.select();
+        navigator.clipboard.writeText(streamLinkInput.value);
+        copyStreamLinkBtn.textContent = '✅ ¡Copiado!';
+        setTimeout(() => copyStreamLinkBtn.textContent = '📋 Copiar Enlace', 2000);
+      });
+    } else {
+      document.getElementById('hostControls').style.display = 'none';
+      statusText.textContent = 'En Vivo (Espectador)';
+    }
+
+    function broadcastState() {
+      if (isViewer) return;
+      if (mqttClient && mqttClient.isConnected()) {
+        const payload = JSON.stringify({
+          drawn: Array.from(drawnNumbers),
+          current: currentBallElem.textContent,
+          jackpot: jackpotData,
+          winners: winnersList,
+          showBanner: winnerBanner.style.display === 'block'
+        });
+
+        const message = new Paho.MQTT.Message(payload);
+        message.destinationName = mqttTopic;
+        message.retained = true;
+        mqttClient.send(message);
+      }
+    }
+
+    function applyRemoteState(data) {
+      drawnNumbers = new Set(data.drawn);
+      document.querySelectorAll('.ball-slot').forEach((el, idx) => {
+        const num = idx + 1;
+        if (drawnNumbers.has(num)) el.classList.add('active');
+        else el.classList.remove('active');
+      });
+      currentBallElem.textContent = data.current;
+      updateCount();
+
+      if (data.jackpot) {
+        jackpotData = data.jackpot;
+        updateJackpotDisplay();
+      }
+
+      if (data.winners) {
+        winnersList = data.winners;
+        updatePodiumUI();
+      }
+
+      if (data.showBanner) {
+        winnerBanner.style.display = 'block';
+      } else {
+        winnerBanner.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>
